@@ -1,8 +1,0 @@
-prefix=/home/ee106/ros_ws/security/devel
-
-Name: securitybot
-Description: Description of securitybot
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/ee106/ros_ws/security/devel/lib 
-Requires: 
