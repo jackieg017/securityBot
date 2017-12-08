@@ -1,6 +1,0 @@
-<launch>
-
-  <node name="image_process" pkg="securitybot" type="ros_img_parser.py"  respawn="false" output="screen" />
-  <node name="intruder_detector" pkg="securitybot" type="intruderAI.py"  respawn="false" output="screen" />
-
-</launch>
