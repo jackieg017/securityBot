@@ -1,5 +1,6 @@
 # securityBot
 Robotics Final Project EE106A 
+By: Jacqueline Garcia & Eduardo Garibay
 
 Our goal was to use the fundamentals learned in EE106A, and use them to target real life social issues. 
 Visit our website to see how we did this: 
