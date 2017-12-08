@@ -1,0 +1,2 @@
+securitybot
+-DCATKIN_DEVEL_PREFIX=/home/ee106/ros_ws/security/devel -DCMAKE_INSTALL_PREFIX=/home/ee106/ros_ws/security/install -G Unix Makefiles
