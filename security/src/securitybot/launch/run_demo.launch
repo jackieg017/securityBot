@@ -1,0 +1,12 @@
+<launch>
+  <node name="watch_path" pkg="securitybot" type="watch_path.py"  respawn="false" output="screen" />
+  
+
+  <node name="process_image" pkg="securitybot" type="process_image.py"  respawn="false" output="screen" />
+
+  <node name="intruderAI_detection" pkg="securitybot" type="intruderAI_detection.py"  respawn="false" output="screen" />
+
+  <node name="alert_homeowners" pkg="securitybot" type="alert_homeowners.py"  respawn="false" output="screen" />
+
+
+</launch>

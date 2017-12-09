@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-#File: https://www.pyimagesearch.com/2017/09/18/real-time-object-detection-with-deep-learning-and-opencv/
+#Citation: https://www.pyimagesearch.com/2017/09/18/real-time-object-detection-with-deep-learning-and-opencv/
 
 import numpy as np
 import imutils
-import cv2
 #rospy for the subscriber
 import rospy
 import cv2
@@ -11,9 +10,6 @@ import cv2
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool
 from cv_bridge import CvBridge, CvBridgeError
-#import roslib
-#import sys
-#import time
 #from imutils.video import VideoStream
 
 #get Caffe model definition (architecture of the model that was used during training)
@@ -35,6 +31,13 @@ net = cv2.dnn.readNetFromCaffe(protext, model)
 #time.sleep(2.0)
 
 class intruderAI:
+    def __init__(self):
+        #retrieve a BGR image from the kinect
+        self.bridge = CvBridge()
+        self.image_sub = rospy.Subscriber('surveillance_system' , Image , self.detect_intruder_callback)
+        self.image_pub_boolean = rospy.Publisher('intruder_found_bool', Bool)
+        self.image_pub_img = rospy.Publisher('intruder_found_img', Image)
+
     def ros_to_cv_img(self, ros_img_msg):
         # return np.array(self.bridge.imgmsg_to_cv2(ros_img_msg,'bgr8'))
         return self.bridge.imgmsg_to_cv2(ros_img_msg, 'bgr8')
@@ -44,11 +47,9 @@ class intruderAI:
 
     #Our call back is being passed in image data that the kinect is capturing
     def detect_intruder_callback(self,img_data):
-        #r = rospy.Rate(1)
+        r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            print("hello")
             ros_to_cvimg = self.ros_to_cv_img(img_data)
-            #print("PRINTING -------->>>>>>>", cv2_image_to_array)
             # load the current frame(img_data) and grab its dimension and convert it to a blob
             frame = imutils.resize(ros_to_cvimg, width=400)
  
@@ -65,7 +66,6 @@ class intruderAI:
             detections = net.forward()
 
             # loop over the detections/predictions
-            #print("HERE2!!")
             for i in np.arange(0, detections.shape[2]):
                 # extract the confidence (i.e., probability) associated with the prediction
                 confidence = detections[0, 0, i, 2]
@@ -78,12 +78,12 @@ class intruderAI:
 
                 #minX, minY, maxX, maxY correspond to the points of each corner of the current bounding box of the image
                 (minX, minY, maxX, maxY) = box.astype("int")
-                #index 15 corresponds to the label of "person"
+                #index 15 corresponds to the label of "intruder"
                 if idx == 15:
-                    print("hello")
                     #Let the homeowner know that an intruder is present
-                    #self.image_pub.publish(True)
+                    self.image_pub_boolean.publish(True)
 
+                    #Creating bounding box over intruder. Preparing new image that will be attached to the email
                     label = "INTRUDER"
                     prediction_accuracy = confidence * 100
                     label_info = "{}: {:.2f}%".format(label, prediction_accuracy)
@@ -91,49 +91,25 @@ class intruderAI:
                     cv2.rectangle(img = frame, pt1 = (minX, minY), pt2 = (maxX, maxY), color = box_color, thickness =2)
                     #Pad where the label will show up in the box, in this case 15 cm below the upper left border
                     minY = minY + 15
-                    #org:Bottom-left corner of the text string in the image/current frame
+            
                     cv2.putText(frame, text = label_info, org = (minX, minY),fontFace = cv2.FONT_HERSHEY_SIMPLEX, 
                         fontScale = 0.5, color = box_color, thickness = 2)
 
-        
 
-                    #cv2.imshow("Frame", np.array(frame))
-                    
-                    # try:
-                    #     #Publish our image to the 'intruder_detection' topic
-                    #     self.image_pub.publish(self.cv_img_to_ros(frame))
-                    #     r.sleep()
+                    self.image_pub_img.publih(frame)
 
-                    #     #Does our object decttion algorihtm expect the image to be a openCV image or 2d np array?
-                    #     #self.image_pub.publish(ros_to_np_img(self.bridge.cv2_to_imgmsg(cv_image, "bgr8")))
-                    # except CvBridgeError as exception:
-                    #     print(exception)
+                    r.sleep()
 
-                
-                cv2.imshow("frame", frame)
-
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-                #self.image_pub.publish(self.cv_img_to_ros(frame))
+                #cv2.imshow("frame", frame)
                 #r.sleep()
 
 
-            # show the output frame with a box around any humans
-            # cv2.imshow("Frame", frame)
-            # cv2.waitKey(100)
             key = cv2.waitKey(1) & 0xFF
-    def __init__(self):
-        #retrieve a BGR image from the kinect
-        self.bridge = CvBridge()
-        #self.image_sub = rospy.Subscriber('camera/rgb/image_color' , Image , self.detect_intruder_callback)
-        self.image_sub = rospy.Subscriber('intruder_detection' , Image , self.detect_intruder_callback)
-        #self.image_pub = rospy.Publisher('display_img', Image, queue_size=10)
 
 
 #Python syntax for main method
 if __name__ == '__main__':
-    #Run this program as a new node in the ROS computation graph called 'image_converter'
-    rospy.init_node('security_detection', anonymous=True)
+    rospy.init_node('surveillance_system', anonymous=True)
     #When a intruderAI object instance is initialized it will automatically run the subsriber and publisher
     intruderAI = intruderAI()
     try:
@@ -143,4 +119,5 @@ if __name__ == '__main__':
         print("Shutting down")
     #Destroy all windows that are connected to a camera.
     cv2.destroyAllWindows()
-    #main(sys.argv)
+
+
